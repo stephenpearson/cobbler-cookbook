@@ -49,7 +49,7 @@ template "/etc/cobbler/pxe/pxedefault.template" do
   owner "root"
   group "root"
   mode 0644
-  notifies :restart, "service[cobbler]", :delayed
+  notifies :run, "execute[restart_cobbler]", :delayed
 end
 
 template "/etc/cobbler/dhcp.template" do
@@ -66,7 +66,7 @@ template "/etc/cobbler/dhcp.template" do
     :dhcp_start => dhcp_start,
     :dhcp_end => dhcp_end
   })
-  notifies :restart, "service[cobbler]", :delayed
+  notifies :run, "execute[restart_cobbler]", :delayed
 end
 
 template "/etc/cobbler/settings" do
@@ -77,7 +77,7 @@ template "/etc/cobbler/settings" do
   variables({
     :server_address => server_address
   })
-  notifies :restart, "service[cobbler]", :immediately
+  notifies :run, "execute[restart_cobbler]", :immediately
 end
 
 execute "sync_cobbler" do
@@ -85,21 +85,22 @@ execute "sync_cobbler" do
   action :nothing
 end
 
+execute "restart_cobbler" do
+  command "sleep 1; service cobbler stop; sleep 1; service cobbler start; sleep 1; "
+  action :nothing
+  notifies :run, "execute[sync_cobbler]", :immediately
+end
+
 service "cobbler" do
-  action :enable
-  enabled true
-  running true
-  restart_command "service cobbler stop; sleep 1" +
-                  "service cobbler start; sleep 1"
-  supports [ :stop, :start, :status ]
+  action [ :enable, :start ]
+  supports :status => true, :restart => false,
+           :stop => true, :start => true, :reload => false
   notifies :run, "execute[sync_cobbler]", :immediately
 end
 
 service "isc-dhcp-server" do
-  action :enable
-  enabled true
-  running true
-  supports [ :stop, :start, :status ]
+  action [ :enable, :start ]
+  supports :status => true, :restart => true, :reload => false
 end
 
 cobbler_repo "test123" do
@@ -109,4 +110,28 @@ cobbler_repo "test123" do
   breed "apt"
   mirror "http://gb.archive.ubuntu.com/ubuntu/"
   local_mirror false
+end
+
+cobbler_profile "test123" do
+  dhcp_tag "default"
+  distro "ubuntu-server-x86_64"
+  enable_gpxe false
+  enable_menu true
+  kickstart "/var/lib/cobbler/kickstarts/sample.seed"
+  owners [ "admin" ]
+  virt_bridge "virbr0"
+  virt_auto_boot true
+  virt_cpus 1
+  virt_disk_driver "raw"
+  virt_file_size 5
+  virt_type "kvm"
+end
+
+cobbler_distro "test123" do
+  arch "x86_64"
+  breed "ubuntu"
+  initrd "/var/www/cobbler/ks_mirror/ubuntu-server/install/netboot/ubuntu-installer/amd64/initrd.gz"
+  kernel "/var/www/cobbler/ks_mirror/ubuntu-server/install/netboot/ubuntu-installer/amd64/linux"
+  kickstart_metadata({ "tree" => "http://@@http_server@@/cblr/links/ubuntu-server-x86_64" })
+  os_version "trusty"
 end

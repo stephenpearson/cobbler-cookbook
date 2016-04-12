@@ -46,7 +46,7 @@ def get_repo_details(name)
 end
 
 def conv_str_to_list(str)
-  str.delete("[]' ").split(/,/)
+  YAML.load(str)
 end
 
 load_current_value do
@@ -85,8 +85,17 @@ action :create do
               "--mirror=\"#{mirror}\" " +
               "--mirror-locally=\"#{local_mirror.to_s}\" " +
               "--keep-updated=\"#{keep_updated.to_s}\" " +
-              "--owners=\"#{owners}\" " +
+              "--owners=\"#{owners.join(" ")}\" " +
               "--priority=#{priority.to_s}"
+    end
+  end
+end
+
+action :delete do
+  repos = get_repo_list
+  if repos.include?(instance_name)
+    execute "remove_repo" do
+      command "cobbler repo remove --name \"#{instance_name}\""
     end
   end
 end

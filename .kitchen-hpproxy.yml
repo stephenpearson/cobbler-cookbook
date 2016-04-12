@@ -1,0 +1,29 @@
+---
+driver:
+  name: vagrant
+  customize:
+    memory: 2048
+  network:
+    - [ "private_network", { ip: "192.168.66.4" } ]
+  driver_config:
+    http_proxy: http://proxy.bbn.hp.com:8080
+    https_proxy: http://proxy.bbn.hp.com:8080
+  vagrantfiles:
+    - vagrant-proxy.rb
+
+provisioner:
+  name: chef_zero
+  http_proxy: http://proxy.bbn.hp.com:8080
+  https_proxy: http://proxy.bbn.hp.com:8080
+
+platforms:
+  - name: ubuntu-14.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[cobbler::default]
+    attributes:
+      chef-client:
+        http_proxy: http://proxy.bbn.hp.com:8080
+        https_proxy: http://proxy.bbn.hp.com:8080
