@@ -8,7 +8,7 @@ d-i     debian-installer/splash boolean false
 d-i     console-setup/ask_detect        boolean false
 d-i     console-setup/layoutcode        string us
 d-i     console-setup/variantcode       string
-d-i     netcfg/get_nameservers  string
+d-i     netcfg/get_nameservers  string 192.168.66.1
 d-i     netcfg/get_ipaddress    string
 d-i     netcfg/get_netmask      string 255.255.255.0
 d-i     netcfg/get_gateway      string
@@ -17,7 +17,7 @@ d-i     clock-setup/utc boolean true
 d-i     mirror/country string manual
 d-i     mirror/http/hostname string gb.archive.ubuntu.com
 d-i     mirror/http/directory string /ubuntu
-d-i     mirror/http/proxy string
+d-i     mirror/http/proxy string http://192.168.66.1:3142
 d-i     mirror/http/mirror string gb.archive.ubuntu.com
 d-i     mirror/codename string trusty
 d-i     mirror/suite string trusty
@@ -60,3 +60,4 @@ d-i     cdrom-detect/eject      boolean true
 d-i     debian-installer/exit/halt      boolean false
 d-i     debian-installer/exit/poweroff  boolean false
 d-i     pkgsel/include string byobu vim openssh-server
+d-i     preseed/late_command string wget http://$http_server/cblr/svc/op/nopxe/system/$name
